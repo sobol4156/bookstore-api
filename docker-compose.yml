@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   postgres:
@@ -18,21 +17,36 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - analytics_network
 
-  # app:
-  #   build: .
-  #   container_name: analytics_api
-  #   restart: always
-  #   env_file: .env
-  #   ports:
-  #     - "${PORT}:${PORT}"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   command: npm run start:dev
-  #   volumes:
-  #     - .:/app
-  #     - /app/node_modules
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: analytics_api
+    restart: always
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-analytics_db}
+      - PORT=${PORT:-3000}
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/dist
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - analytics_network
+    command: sh -c "pnpm prisma migrate deploy && pnpm start:dev"
 
 volumes:
   postgres_data:
+
+networks:
+  analytics_network:

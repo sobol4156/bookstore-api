@@ -9,6 +9,7 @@ export class HealthController {
     private http: HttpHealthIndicator,
   ) {}
 
+  // NOTE: add a database check
   @Get()
   @HealthCheck()
   check() {

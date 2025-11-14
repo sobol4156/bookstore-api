@@ -7,10 +7,10 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // Get values from .env with fallback to default values
-const CONTAINER_NAME = process.env.POSTGRES_CONTAINER_NAME || "analytics_postgres";
-const DB_USER = process.env.POSTGRES_USER || "postgres";
-const DB_NAME = process.env.POSTGRES_DB || "analytics_db";
-const BACKUP_DIR = path.resolve(process.env.BACKUP_DIR || "./backups");
+const CONTAINER_NAME = process.env.POSTGRES_CONTAINER_NAME || "";
+const DB_USER = process.env.POSTGRES_USER || "";
+const DB_NAME = process.env.POSTGRES_DB || "";
+const BACKUP_DIR = path.resolve(process.env.BACKUP_DIR || "");
 
 // Get backup file name from command line arguments
 const backupFileName = process.argv[2];
