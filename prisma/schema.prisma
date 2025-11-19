@@ -7,16 +7,89 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  name     String?
-  password String
-  role     Role    @default(USER)
-}
-
 enum Role {
   USER
   ADMIN
-  MODERATOR
+}
+
+enum BookStatus {
+  AVAILABLE // The book is in the library and available for rental/purchase
+  RENTED // Currently rented
+  SOLD // Sold (if applicable)
+  RESERVED // Reserved
+  MAINTENANCE // Under maintenance/unavailable
+}
+
+enum OrderType {
+  PURCHASE
+  RENTAL
+}
+
+enum RentalDuration {
+  TWO_WEEKS
+  ONE_MONTH
+  THREE_MONTHS
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orders       Order[]
+
+  @@index([email])
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String
+  bookId    String
+  book      Book     @relation(fields: [bookId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([bookId])
+  @@index([createdAt])
+}
+
+model Book {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  authorId    String
+  categoryId  String
+  year        Int?
+  priceCents  Int
+  author      Author   @relation(fields: [authorId], references: [id])
+  orders      Order[]
+  category    Category @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([title])
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([year])
+}
+
+model Author {
+  id        String   @id @default(uuid())
+  name      String
+  bio       String?
+  books     Book[]
+  createdAt DateTime @default(now())
+
+  @@index([name])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  books     Book[]
+  createdAt DateTime @default(now())
 }

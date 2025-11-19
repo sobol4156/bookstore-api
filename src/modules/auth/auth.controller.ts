@@ -21,6 +21,12 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  async logout(@Res() response: Response) {
+    return this.authService.logout(response);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@Request() req: RequestExp) {
     return req.user;

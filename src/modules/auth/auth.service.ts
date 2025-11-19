@@ -36,7 +36,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const newUser = await this.dbService.user.create({
+    await this.dbService.user.create({
       data: {
         email: dto.email,
         password: hashedPassword,
@@ -81,5 +81,14 @@ export class AuthService {
       path: '/',
     });
     return { message: 'Logged in successfully' };
+  }
+
+  async logout(response: Response) {
+    response.clearCookie('access_token', {
+      sameSite: 'lax',
+      httpOnly: true
+    })
+
+    return { message: 'Logged out successfully' }
   }
 }
