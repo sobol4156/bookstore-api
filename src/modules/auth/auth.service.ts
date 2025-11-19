@@ -1,17 +1,11 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt'
 import config from '../../config';
 import type { Response } from 'express';
-
-interface User {
-  id: number;
-  email: string;
-  name: string | null;
-  password: string;
-}
+import type { User } from "@prisma/client"
 
 @Injectable()
 export class AuthService {
@@ -31,7 +25,7 @@ export class AuthService {
     return null;
   }
 
-  async createUser(dto: CreateUserDTO) {
+  async createUser(dto: CreateUserDTO, response: Response) {
     const existing = await this.dbService.user.findUnique({
       where: { email: dto.email }
     });
@@ -42,21 +36,38 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const newUser = {
+    const newUser = await this.dbService.user.create({
       data: {
         email: dto.email,
         password: hashedPassword,
       },
+    });
+
+    const user = await this.validateUser({ email: dto.email, password: dto.password });
+
+    if (!user) {
+      throw new UnauthorizedException('User email or password is invalid');
     }
 
-    return this.dbService.user.create(newUser);
+    const payload = { sub: user.id, email: user.email };
+    const token = this.jwtService.sign(payload);
+
+    response.cookie('access_token', token, {
+      httpOnly: true,
+      secure: config.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      path: '/',
+    });
+
+    return { message: 'User successfully registered', user };
   }
 
   async loginUser(dto: CreateUserDTO, response: Response) {
     const user = await this.validateUser(dto);
 
     if (!user) {
-      throw new Error('User email or password is invalid');
+      throw new UnauthorizedException('User email or password is invalid');
     }
 
     const payload = { sub: user.id, email: user.email };
