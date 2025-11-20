@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -32,25 +31,31 @@ enum RentalDuration {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  orders       Order[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  name          String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  rentals       Rental[]
+  notifications Notification[]
 
   @@index([email])
 }
 
 model Order {
-  id        String   @id @default(uuid())
-  user      User?    @relation(fields: [userId], references: [id])
+  id String @id @default(uuid())
+
   userId    String
   bookId    String
-  book      Book     @relation(fields: [bookId], references: [id])
-  createdAt DateTime @default(now())
+  type      OrderType
+  createdAt DateTime  @default(now())
+
+  rental Rental?
+  book   Book    @relation(fields: [bookId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([bookId])
@@ -58,18 +63,24 @@ model Order {
 }
 
 model Book {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  authorId    String
-  categoryId  String
-  year        Int?
-  priceCents  Int
-  author      Author   @relation(fields: [authorId], references: [id])
-  orders      Order[]
-  category    Category @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String     @id @default(uuid())
+  title          String
+  description    String?
+  authorId       String
+  categoryId     String
+  year           Int?
+  priceCents     Int
+  rentPriceCents Int
+  status         BookStatus @default(AVAILABLE)
+  coverUrl       String?
+  available      Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  author   Author   @relation(fields: [authorId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+  orders   Order[]
+  rentals  Rental[]
 
   @@index([title])
   @@index([authorId])
@@ -81,8 +92,9 @@ model Author {
   id        String   @id @default(uuid())
   name      String
   bio       String?
-  books     Book[]
   createdAt DateTime @default(now())
+
+  books     Book[]
 
   @@index([name])
 }
@@ -90,6 +102,41 @@ model Author {
 model Category {
   id        String   @id @default(uuid())
   name      String
-  books     Book[]
   createdAt DateTime @default(now())
+
+  books     Book[]
+}
+
+model Rental {
+  id       String   @id @default(uuid())
+  orderId  String   @unique
+  userId   String
+  bookId   String
+  startAt  DateTime @default(now())
+  endAt    DateTime
+  isActive Boolean  @default(true)
+  duration RentalDuration
+  autoReminderAt DateTime?
+
+  order Order @relation(fields: [orderId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  book  Book  @relation(fields: [bookId], references: [id])
+
+  @@index([userId])
+  @@index([bookId])
+  @@index([endAt])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  message   String
+  sentAt    DateTime?
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
 }
