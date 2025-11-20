@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -33,11 +34,11 @@ enum RentalDuration {
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
-  passwordHash  String
+  password      String
   name          String?
   role          Role           @default(USER)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   orders        Order[]
   rentals       Rental[]
   notifications Notification[]
@@ -51,7 +52,7 @@ model Order {
   userId    String
   bookId    String
   type      OrderType
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   rental Rental?
   book   Book    @relation(fields: [bookId], references: [id])
@@ -74,8 +75,8 @@ model Book {
   status         BookStatus @default(AVAILABLE)
   coverUrl       String?
   available      Boolean    @default(true)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   author   Author   @relation(fields: [authorId], references: [id])
   category Category @relation(fields: [categoryId], references: [id])
@@ -89,34 +90,34 @@ model Book {
 }
 
 model Author {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   name      String
   bio       String?
   createdAt DateTime @default(now())
 
-  books     Book[]
+  books Book[]
 
   @@index([name])
 }
 
 model Category {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   name      String
   createdAt DateTime @default(now())
 
-  books     Book[]
+  books Book[]
 }
 
 model Rental {
-  id       String   @id @default(uuid())
-  orderId  String   @unique
-  userId   String
-  bookId   String
-  startAt  DateTime @default(now())
-  endAt    DateTime
-  isActive Boolean  @default(true)
-  duration RentalDuration
-  autoReminderAt DateTime?
+  id             String         @id @default(uuid())
+  orderId        String         @unique
+  userId         String
+  bookId         String
+  startAt        DateTime      @default(now())
+  endAt          DateTime
+  isActive       Boolean        @default(true)
+  duration       RentalDuration
+  autoReminderAt DateTime
 
   order Order @relation(fields: [orderId], references: [id])
   user  User  @relation(fields: [userId], references: [id])
@@ -133,7 +134,7 @@ model Notification {
   message   String
   sentAt    DateTime?
   read      Boolean   @default(false)
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
 
