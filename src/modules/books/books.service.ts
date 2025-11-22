@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
-import type { GetBooksQueryDtoDefault } from './dto/get-books-query.dto';
+import { GetBooksQueryDto } from './dto/get-books-query.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class BooksService {
   constructor(private readonly dbService: DbService) { }
 
-  getBooks(params: GetBooksQueryDtoDefault){
+  async getBooks(params: GetBooksQueryDto){
 
     const where: Prisma.BookWhereInput = {};
 
@@ -34,8 +34,8 @@ export class BooksService {
       };
     }
 
-    const skip = (params.page - 1) * params.limit;
-    const take = params.limit;
+    const skip = ((params.page ?? 1) - 1) * (params.limit ?? 10);
+    const take = params.limit ?? 10;
 
     return this.dbService.book.findMany({
       where,
