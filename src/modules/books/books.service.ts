@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { GetBooksQueryDto } from './dto/get-books-query.dto';
 import { Prisma } from '@prisma/client';
+import { CreateBookDto } from './dto/create-book.dto';
 
 @Injectable()
 export class BooksService {
@@ -57,6 +58,12 @@ export class BooksService {
         orders: true,
         rentals: true,
       },
+    });
+  }
+
+  async createBook(dto: CreateBookDto) {
+    return this.dbService.book.create({
+      data: dto,
     });
   }
 }
