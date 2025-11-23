@@ -5,8 +5,8 @@ import { ConfigModule } from '@nestjs/config';
 import { HealthModule } from './modules/health/health.module';
 import { DbModule } from './modules/db/db.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { AuthController } from './modules/auth/auth.controller';
 import { BooksModule } from './modules/books/books.module';
+import { AuthorModule } from './modules/authors/authors.module';
 
 @Module({
   imports: [
@@ -18,8 +18,9 @@ import { BooksModule } from './modules/books/books.module';
     DbModule,
     AuthModule,
     BooksModule,
+    AuthorModule,
   ],
-  controllers: [AppController, AuthController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule { }
