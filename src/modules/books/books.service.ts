@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { GetBooksQueryDto } from './dto/get-books-query.dto';
 import { Prisma } from '@prisma/client';
 import { CreateBookDto } from './dto/create-book.dto';
+import { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
 export class BooksService {
@@ -65,5 +66,46 @@ export class BooksService {
     return this.dbService.book.create({
       data: dto,
     });
+  }
+
+  async updateBook(id: string, dto: UpdateBookDto) {
+
+    const existingBook = await this.dbService.book.findUnique({
+      where: { id },
+    });
+
+    if (!existingBook) {
+      throw new NotFoundException('Book not found');
+    }
+
+    if(dto.authorId) {
+      const author = await this.dbService.author.findUnique({
+        where: { id: dto.authorId },
+      });
+      if (!author) {
+        throw new NotFoundException('Author not found');
+      }
+    }
+
+    if(dto.categoryId) {
+      const category = await this.dbService.category.findUnique({
+        where: { id: dto.categoryId },
+      });
+      if (!category) {
+        throw new NotFoundException('Category not found');
+      }
+    }
+    
+    try {
+      return this.dbService.book.update({
+        where: { id },
+        data: dto,
+      });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+      throw error
+    }
   }
 }

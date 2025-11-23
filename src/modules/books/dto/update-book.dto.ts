@@ -1,87 +1,95 @@
 import { BookStatus } from "@prisma/client";
 import { Transform, Type } from "class-transformer";
 import { IsString, IsNumber, IsEnum, IsNotEmpty, MaxLength, MinLength, IsOptional, IsUrl, Min, Max } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class CreateBookDto {
-  @ApiProperty({
+export class UpdateBookDto {
+  @ApiPropertyOptional({
     description: 'Book title',
     example: 'Harry Potter and the Philosopher\'s Stone',
     minLength: 3,
     maxLength: 255
   })
+  @IsOptional()
   @IsString()
   @MinLength(3)
   @MaxLength(255)
-  @Transform(({ value }) => value.trim())
-  title: string;
+  @Transform(({ value }) => value?.trim())
+  title?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Book description',
     example: 'A story about a young wizard who discovers his magical heritage'
   })
+  @IsOptional()
   @IsString()
-  @Transform(({ value }) => value.trim())
-  description: string;
+  @Transform(({ value }) => value?.trim())
+  description?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Author ID',
     example: '550e8400-e29b-41d4-a716-446655440000'
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
-  authorId: string;
+  @Transform(({ value }) => value?.trim())
+  authorId?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Category ID',
     example: '550e8400-e29b-41d4-a716-446655440001'
   })
+  @IsOptional()
   @IsString()
   @IsNotEmpty()
-  @Transform(({ value }) => value.trim())
-  categoryId: string;
+  @Transform(({ value }) => value?.trim())
+  categoryId?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Publication year',
     example: 1997,
     minimum: 1000,
     maximum: 2100
   })
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1000)
   @Max(2100)
-  year: number;
+  year?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Purchase price in cents',
     example: 2000,
     minimum: 0
   })
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  priceCents: number;
+  priceCents?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Rental price in cents',
     example: 500,
     minimum: 0
   })
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
-  rentPriceCents: number;
+  rentPriceCents?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Book status',
     enum: BookStatus,
     example: BookStatus.AVAILABLE
   })
+  @IsOptional()
   @IsEnum(BookStatus)
   @Transform(({ value }) => value as BookStatus)
-  status: BookStatus;
+  status?: BookStatus;
 
   @ApiPropertyOptional({
     description: 'Book cover image URL',

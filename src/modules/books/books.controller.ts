@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, Body, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Param, Body, Post, UseGuards, Patch } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { GetBooksQueryDto } from './dto/get-books-query.dto';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -14,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiCookieAuth
 } from '@nestjs/swagger';
+import { UpdateBookDto } from './dto/update-book.dto';
 
 @ApiTags('books')
 @Controller('books')
@@ -171,5 +172,61 @@ export class BooksController {
   })
   async createBook(@Body() dto: CreateBookDto) {
     return this.booksService.createBook(dto);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Update a book',
+    description: 'Updates a book in the system. ADMIN role required. Only provided fields will be updated.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Book UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
+  @ApiResponse({
+    status: 200,
+    description: 'Book successfully updated',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        title: { type: 'string' },
+        description: { type: 'string', nullable: true },
+        authorId: { type: 'string' },
+        categoryId: { type: 'string' },
+        year: { type: 'number', nullable: true },
+        priceCents: { type: 'number' },
+        rentPriceCents: { type: 'number' },
+        status: { type: 'string' },
+        coverUrl: { type: 'string', nullable: true },
+        available: { type: 'boolean' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data (validation failed)'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Insufficient permissions (ADMIN role required)'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Book not found'
+  })
+  async updateBook(@Param('id') id: string, @Body() dto: UpdateBookDto) {
+    return this.booksService.updateBook(id, dto);
   }
 }
