@@ -26,11 +26,24 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const options = new DocumentBuilder()
-    .setTitle('Analytics API')
-    .setDescription('Analytics API description')
+    .setTitle('Bookstore API')
+    .setDescription('API for managing a bookstore. Allows managing books, authors, categories, orders, and rentals.')
     .setVersion('1.0')
-    .setBasePath('api')
-    .addBearerAuth()
+    .addTag('auth', 'Authentication and authorization')
+    .addTag('books', 'Book operations')
+    .addTag('health', 'Application health check')
+    .addCookieAuth('access_token', {
+      type: 'http',
+      in: 'Cookie',
+      scheme: 'Bearer',
+      description: 'JWT token in cookie',
+    })
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      description: 'JWT token in Authorization header',
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
