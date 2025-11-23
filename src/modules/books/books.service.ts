@@ -47,4 +47,16 @@ export class BooksService {
       },
     });
   }
+
+  async getBookById(id: string) {
+    return this.dbService.book.findUnique({
+      where: { id },
+      include: {
+        author: true,
+        category: true,
+        orders: true,
+        rentals: true,
+      },
+    });
+  }
 }

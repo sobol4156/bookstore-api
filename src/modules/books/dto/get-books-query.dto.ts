@@ -1,4 +1,3 @@
-// dto/get-books-query.dto.ts
 import { IsOptional, IsNumber, IsString, IsEnum, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { BookStatus } from "@prisma/client";
