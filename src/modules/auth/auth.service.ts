@@ -5,7 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import bcrypt from 'bcrypt'
 import config from '../../config';
 import type { Response } from 'express';
-import type { User } from "@prisma/client"
+import { Role, type User } from "@prisma/client"
 
 @Injectable()
 export class AuthService {
@@ -13,6 +13,17 @@ export class AuthService {
     private dbService: DbService,
     private jwtService: JwtService
   ) { }
+
+  private isAdminEmail(email: string): boolean {
+    if (!config.ADMIN_EMAILS_WHITELIST || config.ADMIN_EMAILS_WHITELIST.length === 0) {
+      console.warn('ADMIN_EMAILS_WHITELIST is empty or not configured');
+      return false;
+    }
+    const normalizedEmail = email.toLowerCase().trim();
+    return config.ADMIN_EMAILS_WHITELIST.some(whitelistEmail => 
+      whitelistEmail.toLowerCase().trim() === normalizedEmail
+    );
+  }
 
   async validateUser(dto: CreateUserDTO): Promise<Omit<User, 'password'> | null> {
     const user = await this.dbService.user.findUnique({
@@ -36,10 +47,13 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
+    const role: Role = this.isAdminEmail(dto.email) ? Role.ADMIN : Role.USER;
+
     await this.dbService.user.create({
       data: {
         email: dto.email,
         password: hashedPassword,
+        role
       },
     });
 
