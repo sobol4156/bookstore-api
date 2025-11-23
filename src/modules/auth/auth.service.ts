@@ -49,7 +49,7 @@ export class AuthService {
       throw new UnauthorizedException('User email or password is invalid');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: user.email, role: user.role };
     const token = this.jwtService.sign(payload);
 
     response.cookie('access_token', token, {
@@ -70,7 +70,7 @@ export class AuthService {
       throw new UnauthorizedException('User email or password is invalid');
     }
 
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id, email: user.email, role: user.role };
     const token = this.jwtService.sign(payload);
 
     response.cookie('access_token', token, {

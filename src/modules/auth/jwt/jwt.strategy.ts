@@ -1,7 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
-import config from '../../config';
+import config from '../../../config';
+import { Role } from '@prisma/client';
 
 function extractJwtFromCookie(req: any) {
   if (req && req.cookies && req.cookies['access_token']) {
@@ -24,6 +25,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!payload) {
       throw new UnauthorizedException();
     }
-    return { userId: payload.sub, email: payload.email };
+    return { userId: payload.sub, email: payload.email, role: payload.role as Role };
   }
 }

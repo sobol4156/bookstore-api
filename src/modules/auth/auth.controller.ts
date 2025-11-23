@@ -1,4 +1,4 @@
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtAuthGuard } from './jwt/jwt-auth.guard';
 import { Controller, Body, Post, Res, UseGuards, Get, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { CreateUserDTO } from './dto/create-user.dto';

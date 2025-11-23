@@ -4,8 +4,9 @@ import { AuthController } from './auth.controller';
 import { PassportModule } from '@nestjs/passport';
 import config from '../../config';
 import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './jwt.strategy';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtStrategy } from './jwt/jwt.strategy';
+import { JwtAuthGuard } from './jwt/jwt-auth.guard';
+import { RolesGuard } from './roles/roles.guard';
 
 @Module({
   controllers: [AuthController],
@@ -16,7 +17,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
       signOptions: { expiresIn: '7d' },
     }),
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard],
-  exports: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, RolesGuard],
+  exports: [AuthService, JwtStrategy, RolesGuard],
 })
 export class AuthModule { }
