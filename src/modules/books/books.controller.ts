@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, Body, Post, UseGuards, Patch } from '@nestjs/common';
+import { Controller, Get, Query, Param, Body, Post, UseGuards, Patch, Delete } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { GetBooksQueryDto } from './dto/get-books-query.dto';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -228,5 +228,61 @@ export class BooksController {
   })
   async updateBook(@Param('id') id: string, @Body() dto: UpdateBookDto) {
     return this.booksService.updateBook(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Delete a book',
+    description: 'Deletes a book from the system. ADMIN role required. Cannot delete if book has active rentals or rental orders.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Book UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
+  @ApiResponse({
+    status: 200,
+    description: 'Book successfully deleted',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440000' },
+        title: { type: 'string', example: 'Harry Potter and the Philosopher\'s Stone' },
+        description: { type: 'string', nullable: true },
+        authorId: { type: 'string' },
+        categoryId: { type: 'string' },
+        year: { type: 'number', nullable: true },
+        priceCents: { type: 'number' },
+        rentPriceCents: { type: 'number' },
+        status: { type: 'string' },
+        coverUrl: { type: 'string', nullable: true },
+        available: { type: 'boolean' },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Book not found'
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Cannot delete book: it has active rentals or rental orders. Please return all rentals first.'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Insufficient permissions (ADMIN role required)'
+  })
+  async deleteBook(@Param('id') id: string) {
+    return this.booksService.deleteBook(id);
   }
 }

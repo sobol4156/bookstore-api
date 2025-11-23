@@ -30,6 +30,7 @@ export class AuthService {
       where: { email: dto.email }
     });
     if (user && await bcrypt.compare(dto.password, user.password)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...result } = user;
       return result;
     }

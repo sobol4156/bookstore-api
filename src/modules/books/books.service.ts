@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { GetBooksQueryDto } from './dto/get-books-query.dto';
 import { Prisma } from '@prisma/client';
@@ -9,22 +9,22 @@ import { UpdateBookDto } from './dto/update-book.dto';
 export class BooksService {
   constructor(private readonly dbService: DbService) { }
 
-  async getBooks(params: GetBooksQueryDto){
+  async getBooks(params: GetBooksQueryDto) {
 
     const where: Prisma.BookWhereInput = {};
 
     if (params.authorId) {
       where.authorId = params.authorId;
     }
-    
+
     if (params.categoryId) {
       where.categoryId = params.categoryId;
     }
-    
+
     if (params.year) {
       where.year = params.year;
     }
-    
+
     if (params.status) {
       where.status = params.status;
     }
@@ -78,7 +78,7 @@ export class BooksService {
       throw new NotFoundException('Book not found');
     }
 
-    if(dto.authorId) {
+    if (dto.authorId) {
       const author = await this.dbService.author.findUnique({
         where: { id: dto.authorId },
       });
@@ -87,7 +87,7 @@ export class BooksService {
       }
     }
 
-    if(dto.categoryId) {
+    if (dto.categoryId) {
       const category = await this.dbService.category.findUnique({
         where: { id: dto.categoryId },
       });
@@ -95,11 +95,64 @@ export class BooksService {
         throw new NotFoundException('Category not found');
       }
     }
-    
+
     try {
       return this.dbService.book.update({
         where: { id },
         data: dto,
+      });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+      throw error
+    }
+  }
+
+  async deleteBook(id: string) {
+    const book = await this.dbService.book.findUnique({
+      where: { id },
+      include: {
+        rentals: {
+          where: { isActive: true },
+        },
+        orders: true,
+      },
+    });
+
+    if (!book) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
+    }
+
+    if (book.rentals && book.rentals.length > 0) {
+      throw new ConflictException(
+        `Cannot delete book: it has ${book.rentals.length} active rental(s)`
+      );
+    }
+
+    const activeRentalOrders = book.orders.filter(
+      order => order.type === 'RENTAL'
+    );
+
+    if (activeRentalOrders.length > 0) {
+      const rentalOrderIds = activeRentalOrders.map(o => o.id);
+      const activeRentalsForOrders = await this.dbService.rental.findMany({
+        where: {
+          orderId: { in: rentalOrderIds },
+          isActive: true,
+        },
+      });
+
+      if (activeRentalsForOrders.length > 0) {
+        throw new ConflictException(
+          `Cannot delete book: it has active rental orders`
+        );
+      }
+    }
+
+    try {
+      return this.dbService.book.delete({
+        where: { id },
       });
     } catch (error) {
       if (error.code === 'P2025') {
