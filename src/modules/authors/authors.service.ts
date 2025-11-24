@@ -185,4 +185,34 @@ export class AuthorService {
       throw error;
     }
   }
+
+  async deleteAuthor(id: string) {
+    const author = await this.dbService.author.findUnique({
+      where: { id },
+      include: {
+        books: true,
+      },
+    });
+
+    if (!author) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
+    }
+
+    if (author.books && author.books.length > 0) {
+      throw new ConflictException(
+        `Cannot delete author: author has ${author.books.length} book(s). Please delete or reassign books first.`
+      );
+    }
+
+    try {
+      return await this.dbService.author.delete({
+        where: { id },
+      });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Author with ID ${id} not found`);
+      }
+      throw error;
+    }
+  }
 }

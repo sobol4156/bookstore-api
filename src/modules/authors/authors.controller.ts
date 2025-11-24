@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthorService } from './authors.service';
 import { GetAuthorsQueryDto } from './dto/get-authors-query.dto';
@@ -268,5 +268,65 @@ export class AuthorController {
   })
   async updateAuthor(@Param('id') id: string, @Body() dto: UpdateAuthorDto) {
     return this.authorService.updateAuthor(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Delete an author',
+    description: 'Deletes an author from the system. ADMIN role required. Cannot delete if author has books.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Author UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
+  @ApiResponse({
+    status: 200,
+    description: 'Author successfully deleted',
+    schema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        },
+        name: {
+          type: 'string',
+          example: 'J.K. Rowling'
+        },
+        bio: {
+          type: 'string',
+          nullable: true,
+          example: 'British author, best known for the Harry Potter series'
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Author not found'
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Cannot delete author: author has books. Please delete or reassign books first.'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Insufficient permissions (ADMIN role required)'
+  })
+  async deleteAuthor(@Param('id') id: string) {
+    return this.authorService.deleteAuthor(id);
   }
 }

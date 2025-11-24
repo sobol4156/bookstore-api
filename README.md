@@ -106,6 +106,11 @@ Swagger documentation is available at:
 - ✅ `POST /api/authors` - Create new author (ADMIN only)
   - Body: CreateAuthorDto (name, bio?)
   - Validates: name length, prevents duplicates
+- ✅ `PATCH /api/authors/:id` - Update author (ADMIN only)
+  - Body: UpdateAuthorDto (all fields optional)
+  - Validates: prevents duplicate names
+- ✅ `DELETE /api/authors/:id` - Delete author (ADMIN only)
+  - Prevents deletion if author has books
 
 **Features:**
 
@@ -114,6 +119,7 @@ Swagger documentation is available at:
 - Sorting by name or createdAt (asc/desc)
 - Optional books inclusion
 - Duplicate name prevention
+- Full CRUD operations
 
 ### 🏥 Health Module (`/api/health`)
 
@@ -144,6 +150,8 @@ Swagger documentation is available at:
 | GET    | `/api/authors`       | -    | -     | List authors      |
 | GET    | `/api/authors/:id`   | -    | -     | Get author by ID  |
 | POST   | `/api/authors`       | ✅   | ADMIN | Create author     |
+| PATCH  | `/api/authors/:id`   | ✅   | ADMIN | Update author     |
+| DELETE | `/api/authors/:id`   | ✅   | ADMIN | Delete author     |
 | GET    | `/api/health`        | -    | -     | Health check      |
 
 ## 🗂️ Project Structure
