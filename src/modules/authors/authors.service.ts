@@ -3,6 +3,7 @@ import { DbService } from '../db/db.service';
 import { GetAuthorsQueryDto } from './dto/get-authors-query.dto';
 import { Prisma } from '@prisma/client';
 import { CreateAuthorDto } from './dto/create-author.dto';
+import { UpdateAuthorDto } from './dto/update-author.dto';
 
 @Injectable()
 export class AuthorService {
@@ -125,6 +126,59 @@ export class AuthorService {
         },
       });
     } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('Author with this name already exists');
+      }
+      throw error;
+    }
+  }
+
+  async updateAuthor(id: string, dto: UpdateAuthorDto) {
+    const existingAuthor = await this.dbService.author.findUnique({
+      where: { id },
+    });
+
+    if (!existingAuthor) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
+    }
+
+    if (dto.name) {
+      const duplicateAuthor = await this.dbService.author.findFirst({
+        where: {
+          name: {
+            equals: dto.name.trim(),
+            mode: 'insensitive',
+          },
+          id: {
+            not: id,
+          },
+        },
+      });
+
+      if (duplicateAuthor) {
+        throw new ConflictException(`Author with name "${dto.name}" already exists`);
+      }
+    }
+
+    try {
+      const updateData: Prisma.AuthorUpdateInput = {};
+
+      if (dto.name !== undefined) {
+        updateData.name = dto.name.trim();
+      }
+
+      if (dto.bio !== undefined) {
+        updateData.bio = dto.bio?.trim() || null;
+      }
+
+      return await this.dbService.author.update({
+        where: { id },
+        data: updateData,
+      });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        throw new NotFoundException(`Author with ID ${id} not found`);
+      }
       if (error.code === 'P2002') {
         throw new ConflictException('Author with this name already exists');
       }

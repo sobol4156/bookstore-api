@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthorService } from './authors.service';
 import { GetAuthorsQueryDto } from './dto/get-authors-query.dto';
@@ -7,6 +7,7 @@ import { RolesGuard } from '../auth/roles/roles.guard';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { Role } from '@prisma/client';
 import { CreateAuthorDto } from './dto/create-author.dto';
+import { UpdateAuthorDto } from './dto/update-author.dto';
 
 @ApiTags('authors')
 @Controller('authors')
@@ -108,20 +109,20 @@ export class AuthorController {
     schema: {
       type: 'object',
       properties: {
-        id: { 
+        id: {
           type: 'string',
           example: '550e8400-e29b-41d4-a716-446655440000'
         },
-        name: { 
+        name: {
           type: 'string',
           example: 'J.K. Rowling'
         },
-        bio: { 
+        bio: {
           type: 'string',
           nullable: true,
           example: 'British author, best known for the Harry Potter series'
         },
-        createdAt: { 
+        createdAt: {
           type: 'string',
           format: 'date-time'
         },
@@ -168,20 +169,20 @@ export class AuthorController {
     schema: {
       type: 'object',
       properties: {
-        id: { 
+        id: {
           type: 'string',
           example: '550e8400-e29b-41d4-a716-446655440000'
         },
-        name: { 
+        name: {
           type: 'string',
           example: 'J.K. Rowling'
         },
-        bio: { 
+        bio: {
           type: 'string',
           nullable: true,
           example: 'British author, best known for the Harry Potter series'
         },
-        createdAt: { 
+        createdAt: {
           type: 'string',
           format: 'date-time'
         }
@@ -202,5 +203,70 @@ export class AuthorController {
   })
   async createAuthor(@Body() dto: CreateAuthorDto) {
     return this.authorService.createAuthor(dto);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Update an author',
+    description: 'Updates an author in the system. ADMIN role required. Only provided fields will be updated.'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Author UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000'
+  })
+  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
+  @ApiBody({ type: UpdateAuthorDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Author successfully updated',
+    schema: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        },
+        name: {
+          type: 'string',
+          example: 'J.K. Rowling'
+        },
+        bio: {
+          type: 'string',
+          nullable: true,
+          example: 'British author, best known for the Harry Potter series'
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data (validation failed)'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Insufficient permissions (ADMIN role required)'
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Author not found'
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Author with this name already exists'
+  })
+  async updateAuthor(@Param('id') id: string, @Body() dto: UpdateAuthorDto) {
+    return this.authorService.updateAuthor(id, dto);
   }
 }
