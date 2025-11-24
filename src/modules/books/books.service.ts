@@ -4,12 +4,31 @@ import { GetBooksQueryDto } from './dto/get-books-query.dto';
 import { Prisma } from '@prisma/client';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { RedisService } from '../redis/redis.service';
+import config from '../../config';
 
 @Injectable()
 export class BooksService {
-  constructor(private readonly dbService: DbService) { }
+  constructor(
+    private readonly dbService: DbService,
+    private readonly redisService: RedisService,
+  ) { }
 
   async getBooks(params: GetBooksQueryDto) {
+    const cacheKey = `books:${JSON.stringify({
+      page: params.page ?? 1,
+      limit: params.limit ?? 10,
+      authorId: params.authorId,
+      categoryId: params.categoryId,
+      year: params.year,
+      status: params.status,
+      search: params.search,
+    })}`;
+
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
 
     const where: Prisma.BookWhereInput = {};
 
@@ -39,7 +58,7 @@ export class BooksService {
     const skip = ((params.page ?? 1) - 1) * (params.limit ?? 10);
     const take = params.limit ?? 10;
 
-    return this.dbService.book.findMany({
+    const result = await this.dbService.book.findMany({
       where,
       skip,
       take,
@@ -48,10 +67,21 @@ export class BooksService {
         category: true,
       },
     });
+
+    await this.redisService.set(cacheKey, result, config.REDIS_TTL);
+
+    return result;
   }
 
   async getBookById(id: string) {
-    return this.dbService.book.findUnique({
+    const cacheKey = `book:${id}`;
+
+    const cached = await this.redisService.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    const book = await this.dbService.book.findUnique({
       where: { id },
       include: {
         author: true,
@@ -60,12 +90,22 @@ export class BooksService {
         rentals: true,
       },
     });
+
+    if (book) {
+      await this.redisService.set(cacheKey, book, 600);
+    }
+
+    return book;
   }
 
   async createBook(dto: CreateBookDto) {
-    return this.dbService.book.create({
+    const book = await this.dbService.book.create({
       data: dto,
     });
+
+    await this.redisService.delPattern('books:*');
+
+    return book;
   }
 
   async updateBook(id: string, dto: UpdateBookDto) {
@@ -97,10 +137,15 @@ export class BooksService {
     }
 
     try {
-      return this.dbService.book.update({
+      const book = await this.dbService.book.update({
         where: { id },
         data: dto,
       });
+
+      await this.redisService.del(`book:${id}`);
+      await this.redisService.delPattern('books:*');
+
+      return book;
     } catch (error) {
       if (error.code === 'P2025') {
         throw new NotFoundException(`Book with ID ${id} not found`);
@@ -151,9 +196,14 @@ export class BooksService {
     }
 
     try {
-      return this.dbService.book.delete({
+      const book = await this.dbService.book.delete({
         where: { id },
       });
+
+      await this.redisService.del(`book:${id}`);
+      await this.redisService.delPattern('books:*');
+
+      return book;
     } catch (error) {
       if (error.code === 'P2025') {
         throw new NotFoundException(`Book with ID ${id} not found`);

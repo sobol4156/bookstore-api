@@ -7,6 +7,7 @@ import { DbModule } from './modules/db/db.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { AuthorModule } from './modules/authors/authors.module';
+import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AuthorModule } from './modules/authors/authors.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    RedisModule,
     HealthModule,
     DbModule,
     AuthModule,

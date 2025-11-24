@@ -89,7 +89,7 @@ export class AuthController {
   @Post('logout')
   @ApiOperation({
     summary: 'Logout from the system',
-    description: 'Removes JWT token from cookie. Authentication required.'
+    description: 'Removes JWT token from cookie and adds it to blacklist. Authentication required.'
   })
   @ApiBearerAuth()
   @ApiCookieAuth('access_token')
@@ -107,8 +107,9 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized'
   })
-  async logout(@Res() response: Response) {
-    return this.authService.logout(response);
+  async logout(@Request() req: RequestExp, @Res() response: Response) {
+    const token = req.cookies?.['access_token'] as string | undefined;
+    return this.authService.logout(response, token);
   }
 
   @UseGuards(JwtAuthGuard)

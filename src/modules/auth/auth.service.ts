@@ -6,12 +6,14 @@ import bcrypt from 'bcrypt'
 import config from '../../config';
 import type { Response } from 'express';
 import { Role, type User } from "@prisma/client"
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private dbService: DbService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private redisService: RedisService,
   ) { }
 
   private isAdminEmail(email: string): boolean {
@@ -20,7 +22,7 @@ export class AuthService {
       return false;
     }
     const normalizedEmail = email.toLowerCase().trim();
-    return config.ADMIN_EMAILS_WHITELIST.some(whitelistEmail => 
+    return config.ADMIN_EMAILS_WHITELIST.some(whitelistEmail =>
       whitelistEmail.toLowerCase().trim() === normalizedEmail
     );
   }
@@ -98,7 +100,23 @@ export class AuthService {
     return { message: 'Logged in successfully' };
   }
 
-  async logout(response: Response) {
+  async logout(response: Response, token?: string) {
+    // Если токен передан, добавляем его в blacklist
+    if (token) {
+      try {
+        const decoded = this.jwtService.decode(token);
+        if (decoded && typeof decoded === 'object' && 'exp' in decoded && decoded.exp) {
+          const ttl = decoded.exp - Math.floor(Date.now() / 1000); // секунды до истечения
+          if (ttl > 0) {
+            await this.redisService.addToBlacklist(token, ttl);
+          }
+        }
+      } catch (error) {
+        // Игнорируем ошибки декодирования токена
+        console.error('Error adding token to blacklist:', error);
+      }
+    }
+
     response.clearCookie('access_token', {
       sameSite: 'lax',
       httpOnly: true

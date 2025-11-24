@@ -19,6 +19,22 @@ services:
       retries: 5
     networks:
       - bookstore_network
+    
+  redis:
+    image: redis:7-alpine
+    container_name: bookstore-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    networks:
+      - bookstore_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # app:
   #   build:
@@ -46,8 +62,8 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   bookstore_network:
-    external: true
-    name: bookstore-api_custom_network
+    driver: bridge
