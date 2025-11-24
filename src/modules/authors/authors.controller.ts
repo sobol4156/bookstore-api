@@ -1,7 +1,12 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiCookieAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthorService } from './authors.service';
 import { GetAuthorsQueryDto } from './dto/get-authors-query.dto';
+import { Roles } from '../auth/roles/roles.decorator';
+import { RolesGuard } from '../auth/roles/roles.guard';
+import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { Role } from '@prisma/client';
+import { CreateAuthorDto } from './dto/create-author.dto';
 
 @ApiTags('authors')
 @Controller('authors')
@@ -89,14 +94,113 @@ export class AuthorController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Get an author by ID',
-    description: 'Returns a single author by their unique identifier.'
+    summary: 'Get author by ID',
+    description: 'Returns detailed information about an author including all their books'
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Author UUID',
+    example: '550e8400-e29b-41d4-a716-446655440000'
   })
   @ApiResponse({
     status: 200,
-    description: 'Author successfully retrieved',
+    description: 'Author found',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { 
+          type: 'string',
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        },
+        name: { 
+          type: 'string',
+          example: 'J.K. Rowling'
+        },
+        bio: { 
+          type: 'string',
+          nullable: true,
+          example: 'British author, best known for the Harry Potter series'
+        },
+        createdAt: { 
+          type: 'string',
+          format: 'date-time'
+        },
+        books: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              title: { type: 'string' },
+              description: { type: 'string', nullable: true },
+              year: { type: 'number', nullable: true },
+              priceCents: { type: 'number' },
+              rentPriceCents: { type: 'number' },
+              status: { type: 'string' },
+              coverUrl: { type: 'string', nullable: true }
+            }
+          }
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Author not found'
   })
   async getAuthorById(@Param('id') id: string) {
     return this.authorService.getAuthorById(id);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Create a new author',
+    description: 'Creates a new author in the system. ADMIN role required.'
+  })
+  @ApiBearerAuth()
+  @ApiCookieAuth('access_token')
+  @ApiBody({ type: CreateAuthorDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Author successfully created',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { 
+          type: 'string',
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        },
+        name: { 
+          type: 'string',
+          example: 'J.K. Rowling'
+        },
+        bio: { 
+          type: 'string',
+          nullable: true,
+          example: 'British author, best known for the Harry Potter series'
+        },
+        createdAt: { 
+          type: 'string',
+          format: 'date-time'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid data (validation failed)'
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized'
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Insufficient permissions (ADMIN role required)'
+  })
+  async createAuthor(@Body() dto: CreateAuthorDto) {
+    return this.authorService.createAuthor(dto);
   }
 }

@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { GetAuthorsQueryDto } from './dto/get-authors-query.dto';
 import { Prisma } from '@prisma/client';
+import { CreateAuthorDto } from './dto/create-author.dto';
 
 @Injectable()
 export class AuthorService {
@@ -74,14 +75,60 @@ export class AuthorService {
     const author = await this.dbService.author.findUnique({
       where: { id },
       include: {
-        books: true,
+        books: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            year: true,
+            priceCents: true,
+            rentPriceCents: true,
+            status: true,
+            coverUrl: true,
+            createdAt: true,
+          },
+        },
+        _count: {
+          select: {
+            books: true,
+          },
+        },
       },
     });
 
     if (!author) {
-      throw new NotFoundException('Author not found');
+      throw new NotFoundException(`Author with ID ${id} not found`);
     }
 
     return author
+  }
+
+  async createAuthor(dto: CreateAuthorDto) {
+    const existingAuthor = await this.dbService.author.findFirst({
+      where: {
+        name: {
+          equals: dto.name.trim(),
+          mode: 'insensitive'
+        },
+      },
+    });
+
+    if (existingAuthor) {
+      throw new ConflictException(`Author with name "${dto.name}" already exists`);
+    }
+
+    try {
+      return await this.dbService.author.create({
+        data: {
+          name: dto.name.trim(),
+          bio: dto.bio?.trim() || null,
+        },
+      });
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('Author with this name already exists');
+      }
+      throw error;
+    }
   }
 }
