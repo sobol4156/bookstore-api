@@ -6,7 +6,8 @@ RESTful API for managing a bookstore built with NestJS, Prisma, and PostgreSQL. 
 
 - **Framework**: NestJS 11
 - **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT (cookie-based)
+- **Cache**: Redis (ioredis)
+- **Authentication**: JWT (cookie-based) with token blacklist
 - **Validation**: class-validator, class-transformer
 - **Documentation**: Swagger/OpenAPI
 - **Language**: TypeScript
@@ -15,6 +16,8 @@ RESTful API for managing a bookstore built with NestJS, Prisma, and PostgreSQL. 
 
 - Node.js (v18 or higher)
 - PostgreSQL database
+- Redis server
+- Docker & Docker Compose (recommended)
 - pnpm (or npm/yarn)
 
 ## 🛠️ Installation
@@ -25,7 +28,10 @@ pnpm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your database credentials
+# Edit .env with your database and Redis credentials
+
+# Start PostgreSQL and Redis with Docker Compose
+docker compose up -d
 
 # Generate Prisma client
 npx prisma generate
@@ -72,6 +78,7 @@ Swagger documentation is available at:
 - Password hashing with bcrypt
 - Admin whitelist (configured via `ADMIN_EMAILS_WHITELIST` env variable)
 - Role-based access control (USER, ADMIN)
+- JWT token blacklist for secure logout (Redis-based)
 
 ### 📚 Books Module (`/api/books`)
 
@@ -95,6 +102,8 @@ Swagger documentation is available at:
 - Case-insensitive search by title
 - Full CRUD operations
 - Input validation and sanitization
+- Redis caching for GET endpoints (5-10 min TTL)
+- Automatic cache invalidation on data changes
 
 ### 👤 Authors Module (`/api/authors`)
 
@@ -120,6 +129,8 @@ Swagger documentation is available at:
 - Optional books inclusion
 - Duplicate name prevention
 - Full CRUD operations
+- Redis caching for GET endpoints (5-10 min TTL)
+- Automatic cache invalidation on data changes
 
 ### 🏥 Health Module (`/api/health`)
 
@@ -129,10 +140,20 @@ Swagger documentation is available at:
 ## 🔒 Security
 
 - JWT authentication via HTTP-only cookies
+- JWT token blacklist for secure logout (prevents token reuse after logout)
 - Role-based access control (RolesGuard)
 - Input validation with class-validator
 - Password hashing with bcrypt
 - Admin whitelist for role assignment
+
+## ⚡ Performance & Caching
+
+- **Redis caching** for frequently accessed data:
+  - Books list and details (5-10 min TTL)
+  - Authors list and details (5-10 min TTL)
+- **Automatic cache invalidation** on create/update/delete operations
+- **Pattern-based cache clearing** for efficient bulk invalidation
+- **JWT token blacklist** stored in Redis with automatic expiration
 
 ## 📝 API Endpoints Summary
 
@@ -164,6 +185,7 @@ src/
 │   │   └── roles/      # Roles guard and decorator
 │   ├── books/          # Books CRUD operations
 │   ├── authors/        # Authors CRUD operations
+│   ├── redis/          # Redis service for caching & token blacklist
 │   ├── db/             # Prisma database service
 │   └── health/         # Health check
 ├── config/             # Configuration
@@ -183,6 +205,12 @@ Create a `.env` file in the root directory:
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/bookstore?schema=public"
+
+# Redis
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=  # Optional, leave empty if no password
+REDIS_TTL=300    # Cache TTL in seconds (default: 5 minutes)
 
 # JWT
 JWT_SECRET="your-secret-key-here"
@@ -212,6 +240,11 @@ npx prisma generate     # Generate Prisma client
 npx prisma migrate dev  # Run migrations
 npx prisma studio       # Open Prisma Studio
 
+# Docker
+docker compose up -d   # Start PostgreSQL and Redis
+docker compose down     # Stop services
+docker compose logs -f  # View logs
+
 # Utilities
 pnpm run db:backup      # Backup database
 pnpm run db:restore     # Restore database
@@ -234,6 +267,13 @@ The database includes the following models:
 ## 🔐 Authentication
 
 The API uses JWT tokens stored in HTTP-only cookies. After login/registration, the token is automatically set in cookies and sent with subsequent requests.
+
+**Token Blacklist:**
+
+- When a user logs out, their JWT token is added to a Redis blacklist
+- Blacklisted tokens are automatically rejected on subsequent requests
+- Tokens are automatically removed from blacklist after expiration
+- This prevents token reuse even if the token was intercepted before logout
 
 **Admin Access:**
 
@@ -274,6 +314,8 @@ The API uses JWT tokens stored in HTTP-only cookies. After login/registration, t
 - [ ] Notifications module (user notifications)
 - [ ] Exception filters for better error handling
 - [ ] Database backup/restore automation
+- [ ] Rate limiting with Redis
+- [ ] Cache warming strategies
 
 ## 📖 API Usage Examples
 
