@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthorService } from './authors.service';
 import { GetAuthorsQueryDto } from './dto/get-authors-query.dto';
@@ -85,5 +85,18 @@ export class AuthorController {
   })
   async getAuthors(@Query() query: GetAuthorsQueryDto) {
     return this.authorService.getAuthors(query);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get an author by ID',
+    description: 'Returns a single author by their unique identifier.'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Author successfully retrieved',
+  })
+  async getAuthorById(@Param('id') id: string) {
+    return this.authorService.getAuthorById(id);
   }
 }

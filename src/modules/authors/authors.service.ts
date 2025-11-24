@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { GetAuthorsQueryDto } from './dto/get-authors-query.dto';
 import { Prisma } from '@prisma/client';
@@ -68,5 +68,20 @@ export class AuthorService {
         totalPages: Math.ceil(total / (limit ?? 10)),
       },
     };
+  }
+
+  async getAuthorById(id: string) {
+    const author = await this.dbService.author.findUnique({
+      where: { id },
+      include: {
+        books: true,
+      },
+    });
+
+    if (!author) {
+      throw new NotFoundException('Author not found');
+    }
+
+    return author
   }
 }
