@@ -132,6 +132,29 @@ Swagger documentation is available at:
 - Redis caching for GET endpoints (5-10 min TTL)
 - Automatic cache invalidation on data changes
 
+### 🗂️ Categories Module (`/api/categories`)
+
+- ✅ `GET /api/categories` - Get paginated list of categories
+  - Query params: `page`, `limit`, `search`
+  - Returns: categories with book count and pagination metadata
+- ✅ `GET /api/categories/:id` - Get category by ID
+  - Returns: category with associated books and count
+- ✅ `POST /api/categories` - Create new category (ADMIN only)
+  - Body: CreateCategoryDto (name)
+- ✅ `PATCH /api/categories/:id` - Update category (ADMIN only)
+  - Body: UpdateCategoryDto (all fields optional)
+- ✅ `DELETE /api/categories/:id` - Delete category (ADMIN only)
+  - Prevents deletion if category has books
+
+**Features:**
+
+- Pagination with metadata
+- Search by category name (case-insensitive)
+- Duplicate name prevention
+- Full CRUD operations
+- Redis caching for GET endpoints (5-10 min TTL)
+- Automatic cache invalidation on data changes
+
 ### 🏥 Health Module (`/api/health`)
 
 - ✅ `GET /api/health` - Application health check
@@ -157,23 +180,28 @@ Swagger documentation is available at:
 
 ## 📝 API Endpoints Summary
 
-| Method | Endpoint             | Auth | Role  | Description       |
-| ------ | -------------------- | ---- | ----- | ----------------- |
-| POST   | `/api/auth/register` | -    | -     | Register new user |
-| POST   | `/api/auth/login`    | -    | -     | Login user        |
-| POST   | `/api/auth/logout`   | ✅   | -     | Logout user       |
-| GET    | `/api/auth/me`       | ✅   | -     | Get current user  |
-| GET    | `/api/books`         | -    | -     | List books        |
-| GET    | `/api/books/:id`     | -    | -     | Get book by ID    |
-| POST   | `/api/books`         | ✅   | ADMIN | Create book       |
-| PATCH  | `/api/books/:id`     | ✅   | ADMIN | Update book       |
-| DELETE | `/api/books/:id`     | ✅   | ADMIN | Delete book       |
-| GET    | `/api/authors`       | -    | -     | List authors      |
-| GET    | `/api/authors/:id`   | -    | -     | Get author by ID  |
-| POST   | `/api/authors`       | ✅   | ADMIN | Create author     |
-| PATCH  | `/api/authors/:id`   | ✅   | ADMIN | Update author     |
-| DELETE | `/api/authors/:id`   | ✅   | ADMIN | Delete author     |
-| GET    | `/api/health`        | -    | -     | Health check      |
+| Method | Endpoint              | Auth | Role  | Description        |
+| ------ | --------------------- | ---- | ----- | ------------------ |
+| POST   | `/api/auth/register`  | -    | -     | Register new user  |
+| POST   | `/api/auth/login`     | -    | -     | Login user         |
+| POST   | `/api/auth/logout`    | ✅   | -     | Logout user        |
+| GET    | `/api/auth/me`        | ✅   | -     | Get current user   |
+| GET    | `/api/books`          | -    | -     | List books         |
+| GET    | `/api/books/:id`      | -    | -     | Get book by ID     |
+| POST   | `/api/books`          | ✅   | ADMIN | Create book        |
+| PATCH  | `/api/books/:id`      | ✅   | ADMIN | Update book        |
+| DELETE | `/api/books/:id`      | ✅   | ADMIN | Delete book        |
+| GET    | `/api/authors`        | -    | -     | List authors       |
+| GET    | `/api/authors/:id`    | -    | -     | Get author by ID   |
+| POST   | `/api/authors`        | ✅   | ADMIN | Create author      |
+| PATCH  | `/api/authors/:id`    | ✅   | ADMIN | Update author      |
+| DELETE | `/api/authors/:id`    | ✅   | ADMIN | Delete author      |
+| GET    | `/api/categories`     | -    | -     | List categories    |
+| GET    | `/api/categories/:id` | -    | -     | Get category by ID |
+| POST   | `/api/categories`     | ✅   | ADMIN | Create category    |
+| PATCH  | `/api/categories/:id` | ✅   | ADMIN | Update category    |
+| DELETE | `/api/categories/:id` | ✅   | ADMIN | Delete category    |
+| GET    | `/api/health`         | -    | -     | Health check       |
 
 ## 🗂️ Project Structure
 
@@ -185,6 +213,7 @@ src/
 │   │   └── roles/      # Roles guard and decorator
 │   ├── books/          # Books CRUD operations
 │   ├── authors/        # Authors CRUD operations
+│   ├── categories/     # Categories CRUD operations
 │   ├── redis/          # Redis service for caching & token blacklist
 │   ├── db/             # Prisma database service
 │   └── health/         # Health check

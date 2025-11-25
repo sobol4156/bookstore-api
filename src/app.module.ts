@@ -7,6 +7,7 @@ import { DbModule } from './modules/db/db.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { AuthorModule } from './modules/authors/authors.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
@@ -21,6 +22,7 @@ import { RedisModule } from './modules/redis/redis.module';
     AuthModule,
     BooksModule,
     AuthorModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
