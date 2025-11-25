@@ -191,6 +191,24 @@ Swagger documentation is available at:
 - Ownership enforcement (users manage only their rentals)
 - Automatic book status reset + cache invalidation after return
 
+### 🔔 Notifications Module (`/api/notifications`)
+
+- ✅ `GET /api/notifications` - List notifications for the current user
+  - Query params: `page`, `limit`, `read`
+  - Returns: notifications array + pagination metadata
+- ✅ `GET /api/notifications/:id` - Get notification by ID
+  - Access restricted to the owner
+- ✅ `PATCH /api/notifications/:id/read` - Mark notification as read
+- ✅ `PATCH /api/notifications/read-all` - Mark all notifications as read
+
+**Features:**
+
+- Pagination and optional filtering by read status
+- Ownership enforcement via JWT guard
+- Batch mark-all endpoint (returns updated count)
+- DTO-level validation and transformation for query params
+- Swagger docs for every endpoint
+
 ### 🏥 Health Module (`/api/health`)
 
 - ✅ `GET /api/health` - Application health check
@@ -216,34 +234,38 @@ Swagger documentation is available at:
 
 ## 📝 API Endpoints Summary
 
-| Method | Endpoint                  | Auth | Role  | Description            |
-| ------ | ------------------------- | ---- | ----- | ---------------------- |
-| POST   | `/api/auth/register`      | -    | -     | Register new user      |
-| POST   | `/api/auth/login`         | -    | -     | Login user             |
-| POST   | `/api/auth/logout`        | ✅   | -     | Logout user            |
-| GET    | `/api/auth/me`            | ✅   | -     | Get current user       |
-| GET    | `/api/books`              | -    | -     | List books             |
-| GET    | `/api/books/:id`          | -    | -     | Get book by ID         |
-| POST   | `/api/books`              | ✅   | ADMIN | Create book            |
-| PATCH  | `/api/books/:id`          | ✅   | ADMIN | Update book            |
-| DELETE | `/api/books/:id`          | ✅   | ADMIN | Delete book            |
-| GET    | `/api/authors`            | -    | -     | List authors           |
-| GET    | `/api/authors/:id`        | -    | -     | Get author by ID       |
-| POST   | `/api/authors`            | ✅   | ADMIN | Create author          |
-| PATCH  | `/api/authors/:id`        | ✅   | ADMIN | Update author          |
-| DELETE | `/api/authors/:id`        | ✅   | ADMIN | Delete author          |
-| GET    | `/api/categories`         | -    | -     | List categories        |
-| GET    | `/api/categories/:id`     | -    | -     | Get category by ID     |
-| POST   | `/api/categories`         | ✅   | ADMIN | Create category        |
-| PATCH  | `/api/categories/:id`     | ✅   | ADMIN | Update category        |
-| DELETE | `/api/categories/:id`     | ✅   | ADMIN | Delete category        |
-| GET    | `/api/orders`             | ✅   | USER+ | List own orders        |
-| GET    | `/api/orders/:id`         | ✅   | USER+ | Get own order by ID    |
-| POST   | `/api/orders`             | ✅   | USER+ | Create purchase/rental |
-| GET    | `/api/rentals`            | ✅   | USER+ | List own rentals       |
-| GET    | `/api/rentals/:id`        | ✅   | USER+ | Get rental by ID       |
-| POST   | `/api/rentals/:id/return` | ✅   | USER+ | Return rental          |
-| GET    | `/api/health`             | -    | -     | Health check           |
+| Method | Endpoint                      | Auth | Role  | Description            |
+| ------ | ----------------------------- | ---- | ----- | ---------------------- |
+| POST   | `/api/auth/register`          | -    | -     | Register new user      |
+| POST   | `/api/auth/login`             | -    | -     | Login user             |
+| POST   | `/api/auth/logout`            | ✅   | -     | Logout user            |
+| GET    | `/api/auth/me`                | ✅   | -     | Get current user       |
+| GET    | `/api/books`                  | -    | -     | List books             |
+| GET    | `/api/books/:id`              | -    | -     | Get book by ID         |
+| POST   | `/api/books`                  | ✅   | ADMIN | Create book            |
+| PATCH  | `/api/books/:id`              | ✅   | ADMIN | Update book            |
+| DELETE | `/api/books/:id`              | ✅   | ADMIN | Delete book            |
+| GET    | `/api/authors`                | -    | -     | List authors           |
+| GET    | `/api/authors/:id`            | -    | -     | Get author by ID       |
+| POST   | `/api/authors`                | ✅   | ADMIN | Create author          |
+| PATCH  | `/api/authors/:id`            | ✅   | ADMIN | Update author          |
+| DELETE | `/api/authors/:id`            | ✅   | ADMIN | Delete author          |
+| GET    | `/api/categories`             | -    | -     | List categories        |
+| GET    | `/api/categories/:id`         | -    | -     | Get category by ID     |
+| POST   | `/api/categories`             | ✅   | ADMIN | Create category        |
+| PATCH  | `/api/categories/:id`         | ✅   | ADMIN | Update category        |
+| DELETE | `/api/categories/:id`         | ✅   | ADMIN | Delete category        |
+| GET    | `/api/orders`                 | ✅   | USER+ | List own orders        |
+| GET    | `/api/orders/:id`             | ✅   | USER+ | Get own order by ID    |
+| POST   | `/api/orders`                 | ✅   | USER+ | Create purchase/rental |
+| GET    | `/api/rentals`                | ✅   | USER+ | List own rentals       |
+| GET    | `/api/rentals/:id`            | ✅   | USER+ | Get rental by ID       |
+| POST   | `/api/rentals/:id/return`     | ✅   | USER+ | Return rental          |
+| GET    | `/api/notifications`          | ✅   | USER+ | List notifications     |
+| GET    | `/api/notifications/:id`      | ✅   | USER+ | Notification details   |
+| PATCH  | `/api/notifications/:id/read` | ✅   | USER+ | Mark notification read |
+| PATCH  | `/api/notifications/read-all` | ✅   | USER+ | Mark all read          |
+| GET    | `/api/health`                 | -    | -     | Health check           |
 
 ## 🗂️ Project Structure
 
@@ -258,6 +280,7 @@ src/
 │   ├── categories/     # Categories CRUD operations
 │   ├── orders/         # Orders (purchase & rental creation)
 │   ├── rentals/        # Rentals lifecycle (list, return)
+│   ├── notifications/  # Notifications CRUD & read status
 │   ├── redis/          # Redis service for caching & token blacklist
 │   ├── db/             # Prisma database service
 │   └── health/         # Health check
