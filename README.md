@@ -1,6 +1,6 @@
 # Bookstore API
 
-RESTful API for managing a bookstore built with NestJS, Prisma, and PostgreSQL. The API supports book management, author management, user authentication, and order processing.
+Fully documented NestJS + Prisma REST API for managing books, authors, categories, orders, rentals, notifications, and authentication. The service uses PostgreSQL as the primary store, Redis for caching/token blacklist, and Swagger for up-to-date OpenAPI documentation.
 
 ## 🚀 Technologies
 
@@ -64,6 +64,12 @@ Swagger documentation is available at:
 - **JSON**: `http://localhost:3000/docs-json`
 
 ## ✅ Implemented Features
+
+- Books, Authors, Categories CRUD with validation, search, pagination, and Redis caching
+- User authentication with role-based access control and admin whitelisting
+- Orders (purchase + rental) and Rentals lifecycle with transactional book status updates
+- Notifications center with read/unread filters and bulk acknowledgment
+- Swagger documentation for every DTO/controller, global validation pipe, and JWT guards
 
 ### 🔐 Authentication Module (`/api/auth`)
 
@@ -404,14 +410,11 @@ The API uses JWT tokens stored in HTTP-only cookies. After login/registration, t
 
 ## 🚧 Planned Features
 
-- [ ] Categories module (CRUD)
-- [ ] Orders module (create orders, manage rentals)
-- [ ] Rentals module (manage active rentals, return books)
-- [ ] Notifications module (user notifications)
-- [ ] Exception filters for better error handling
-- [ ] Database backup/restore automation
-- [ ] Rate limiting with Redis
-- [ ] Cache warming strategies
+- [ ] Global exception filters & problem-details responses
+- [ ] Automated database backup/restore scripts (Docker + cron)
+- [ ] Rate limiting & IP throttling backed by Redis
+- [ ] Cache warming jobs for most-used book/author lists
+- [ ] Observability stack (structured logging, metrics, tracing)
 
 ## 📖 API Usage Examples
 
