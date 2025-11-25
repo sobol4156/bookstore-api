@@ -155,6 +155,25 @@ Swagger documentation is available at:
 - Redis caching for GET endpoints (5-10 min TTL)
 - Automatic cache invalidation on data changes
 
+### 🛒 Orders Module (`/api/orders`)
+
+- ✅ `GET /api/orders` - List orders for the authenticated user
+  - Query params: `page`, `limit`, `type`
+  - Returns: orders with book details, rental (if applicable), pagination metadata
+- ✅ `GET /api/orders/:id` - Get specific order (owned by the user)
+  - Ensures users can only fetch their own orders
+- ✅ `POST /api/orders` - Create purchase or rental order
+  - Body: CreateOrderDto (bookId, type, duration for rentals)
+  - Rental orders automatically create rental records and update book status
+
+**Features:**
+
+- Pagination + filtering by order type
+- Ownership enforcement (users see only their orders)
+- Business logic for rental vs purchase flows
+- Automatic book status updates (RENTED/SOLD) and availability enforcement
+- Cache invalidation for affected books (Redis)
+
 ### 🏥 Health Module (`/api/health`)
 
 - ✅ `GET /api/health` - Application health check
@@ -180,28 +199,31 @@ Swagger documentation is available at:
 
 ## 📝 API Endpoints Summary
 
-| Method | Endpoint              | Auth | Role  | Description        |
-| ------ | --------------------- | ---- | ----- | ------------------ |
-| POST   | `/api/auth/register`  | -    | -     | Register new user  |
-| POST   | `/api/auth/login`     | -    | -     | Login user         |
-| POST   | `/api/auth/logout`    | ✅   | -     | Logout user        |
-| GET    | `/api/auth/me`        | ✅   | -     | Get current user   |
-| GET    | `/api/books`          | -    | -     | List books         |
-| GET    | `/api/books/:id`      | -    | -     | Get book by ID     |
-| POST   | `/api/books`          | ✅   | ADMIN | Create book        |
-| PATCH  | `/api/books/:id`      | ✅   | ADMIN | Update book        |
-| DELETE | `/api/books/:id`      | ✅   | ADMIN | Delete book        |
-| GET    | `/api/authors`        | -    | -     | List authors       |
-| GET    | `/api/authors/:id`    | -    | -     | Get author by ID   |
-| POST   | `/api/authors`        | ✅   | ADMIN | Create author      |
-| PATCH  | `/api/authors/:id`    | ✅   | ADMIN | Update author      |
-| DELETE | `/api/authors/:id`    | ✅   | ADMIN | Delete author      |
-| GET    | `/api/categories`     | -    | -     | List categories    |
-| GET    | `/api/categories/:id` | -    | -     | Get category by ID |
-| POST   | `/api/categories`     | ✅   | ADMIN | Create category    |
-| PATCH  | `/api/categories/:id` | ✅   | ADMIN | Update category    |
-| DELETE | `/api/categories/:id` | ✅   | ADMIN | Delete category    |
-| GET    | `/api/health`         | -    | -     | Health check       |
+| Method | Endpoint              | Auth | Role  | Description            |
+| ------ | --------------------- | ---- | ----- | ---------------------- |
+| POST   | `/api/auth/register`  | -    | -     | Register new user      |
+| POST   | `/api/auth/login`     | -    | -     | Login user             |
+| POST   | `/api/auth/logout`    | ✅   | -     | Logout user            |
+| GET    | `/api/auth/me`        | ✅   | -     | Get current user       |
+| GET    | `/api/books`          | -    | -     | List books             |
+| GET    | `/api/books/:id`      | -    | -     | Get book by ID         |
+| POST   | `/api/books`          | ✅   | ADMIN | Create book            |
+| PATCH  | `/api/books/:id`      | ✅   | ADMIN | Update book            |
+| DELETE | `/api/books/:id`      | ✅   | ADMIN | Delete book            |
+| GET    | `/api/authors`        | -    | -     | List authors           |
+| GET    | `/api/authors/:id`    | -    | -     | Get author by ID       |
+| POST   | `/api/authors`        | ✅   | ADMIN | Create author          |
+| PATCH  | `/api/authors/:id`    | ✅   | ADMIN | Update author          |
+| DELETE | `/api/authors/:id`    | ✅   | ADMIN | Delete author          |
+| GET    | `/api/categories`     | -    | -     | List categories        |
+| GET    | `/api/categories/:id` | -    | -     | Get category by ID     |
+| POST   | `/api/categories`     | ✅   | ADMIN | Create category        |
+| PATCH  | `/api/categories/:id` | ✅   | ADMIN | Update category        |
+| DELETE | `/api/categories/:id` | ✅   | ADMIN | Delete category        |
+| GET    | `/api/orders`         | ✅   | USER+ | List own orders        |
+| GET    | `/api/orders/:id`     | ✅   | USER+ | Get own order by ID    |
+| POST   | `/api/orders`         | ✅   | USER+ | Create purchase/rental |
+| GET    | `/api/health`         | -    | -     | Health check           |
 
 ## 🗂️ Project Structure
 
@@ -214,6 +236,7 @@ src/
 │   ├── books/          # Books CRUD operations
 │   ├── authors/        # Authors CRUD operations
 │   ├── categories/     # Categories CRUD operations
+│   ├── orders/         # Orders (purchase & rental flows)
 │   ├── redis/          # Redis service for caching & token blacklist
 │   ├── db/             # Prisma database service
 │   └── health/         # Health check

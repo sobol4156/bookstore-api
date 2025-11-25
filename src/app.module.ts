@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { AuthorModule } from './modules/authors/authors.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { OrdersModule } from './modules/orders/orders.module';
 import { RedisModule } from './modules/redis/redis.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { RedisModule } from './modules/redis/redis.module';
     BooksModule,
     AuthorModule,
     CategoriesModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

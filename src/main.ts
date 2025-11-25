@@ -32,6 +32,8 @@ async function bootstrap() {
     .addTag('auth', 'Authentication and authorization')
     .addTag('books', 'Book operations')
     .addTag('authors', 'Author operations')
+    .addTag('categories', 'Category operations')
+    .addTag('orders', 'Order operations')
     .addTag('health', 'Application health check')
     .addCookieAuth('access_token', {
       type: 'http',
@@ -47,17 +49,17 @@ async function bootstrap() {
     })
     .build();
 
-    const document = SwaggerModule.createDocument(app, options, {
-      operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
-      deepScanRoutes: true,
-    });
-    
-    SwaggerModule.setup('/docs', app, document, {
-      jsonDocumentUrl: '/docs-json',
-      swaggerOptions: {
-        persistAuthorization: true,
-      },
-    });
+  const document = SwaggerModule.createDocument(app, options, {
+    operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
+    deepScanRoutes: true,
+  });
+
+  SwaggerModule.setup('/docs', app, document, {
+    jsonDocumentUrl: '/docs-json',
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
 
   await app.listen(process.env.PORT ?? 3000);
 }
